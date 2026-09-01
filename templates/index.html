@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Job Match Assistant</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: #7f8c8d;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        .upload-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .upload-row input[type="file"] {
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        .status-msg {
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            min-height: 1.2rem;
+        }
+
+        .status-msg.error {
+            color: #c0392b;
+        }
+
+        .status-msg.success {
+            color: #27ae60;
+        }
+
+        .status-msg.info {
+            color: #2980b9;
+        }
+
+        textarea {
+            width: 100%;
+            height: 140px;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
+
+        .action-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .btn-analyze {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn-analyze:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-analyze:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background-color: #7f8c8d;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background-color: #636e72;
+        }
+
+        .btn-secondary:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .btn-action {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn-action:hover {
+            background-color: #27ae60;
+        }
+
+        .btn-action:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .btn-action-alt {
+            background-color: #9b59b6;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn-action-alt:hover {
+            background-color: #8e44ad;
+        }
+
+        .btn-action-alt:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .results-section {
+            border-top: 1px solid #eee;
+            padding-top: 1.5rem;
+        }
+
+        .results-section h2 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .results-content {
+            min-height: 50px;
+        }
+
+        .loading-state {
+            text-align: center;
+            color: #3498db;
+            font-weight: bold;
+            padding: 1.5rem 0;
+        }
+
+        .error-state {
+            background-color: #fde8e8;
+            color: #c0392b;
+            padding: 1rem;
+            border-radius: 4px;
+            border: 1px solid #f5c6cb;
+            margin-bottom: 1rem;
+        }
+
+        .match-score-box {
+            background-color: #e8f4fd;
+            border-left: 4px solid #3498db;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1.25rem;
+        }
+
+        .match-score-box h3 {
+            color: #2c3e50;
+            font-size: 1.2rem;
+        }
+
+        .match-score-box .score-number {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #2980b9;
+        }
+
+        .result-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .result-group h3 {
+            font-size: 1rem;
+            color: #34495e;
+            margin-bottom: 0.5rem;
+        }
+
+        .skills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .skill-badge {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .skill-matching {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .skill-missing {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .result-list {
+            padding-left: 1.25rem;
+            color: #555;
+        }
+
+        .result-list li {
+            margin-bottom: 0.35rem;
+        }
+
+        .experience-text {
+            color: #555;
+            background: #fafafa;
+            padding: 0.75rem;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+
+        .report-actions {
+            margin-top: 1.5rem;
+            padding-top: 1.25rem;
+            border-top: 1px dashed #dcdde1;
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .feature-card {
+            background-color: #ffffff;
+            border: 1px solid #e1e8ed;
+            border-radius: 6px;
+            padding: 1.25rem;
+            margin-top: 1.25rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        .feature-card h3 {
+            color: #2c3e50;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .improvement-item {
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .improvement-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .improvement-item h4 {
+            color: #27ae60;
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .improvement-item p {
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .explanation-text {
+            color: #444;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            background-color: #f9f9f9;
+            padding: 1rem;
+            border-radius: 4px;
+            border-left: 3px solid #9b59b6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI Job Match Assistant</h1>
+            <p>Compare your resume against a job description to find your match score and recommendations.</p>
+        </header>
+
+        <main>
+            <div class="form-group">
+                <label for="resume">Resume</label>
+                <div class="upload-row">
+                    <input type="file" id="resume-pdf-input" accept=".pdf">
+                    <button type="button" id="upload-pdf-btn" class="btn-secondary">Upload PDF</button>
+                </div>
+                <div id="upload-status" class="status-msg"></div>
+                <textarea id="resume" name="resume" placeholder="Paste your resume text here or upload a PDF..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="job-description">Job Description</label>
+                <textarea id="job-description" name="job_description" placeholder="Paste the job description here..."></textarea>
+            </div>
+
+            <div class="action-container">
+                <button type="button" id="analyze-btn" class="btn-analyze">Analyze Match</button>
+            </div>
+
+            <section class="results-section">
+                <h2>Results</h2>
+                <div id="results-content" class="results-content">
+                    <!-- Results will appear here after analysis is performed -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // State storage for follow-up actions
+        let currentAnalysis = null;
+        let currentResume = "";
+        let currentJobDescription = "";
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 1. PDF Resume Upload Handler
+        document.getElementById('upload-pdf-btn').addEventListener('click', async function() {
+            const fileInput = document.getElementById('resume-pdf-input');
+            const uploadStatus = document.getElementById('upload-status');
+            const uploadBtn = document.getElementById('upload-pdf-btn');
+            const resumeInput = document.getElementById('resume');
+
+            const file = fileInput.files[0];
+            if (!file) {
+                uploadStatus.className = 'status-msg error';
+                uploadStatus.textContent = 'Please select a PDF file first.';
+                return;
+            }
+
+            if (!file.name.toLowerCase().endsWith('.pdf')) {
+                uploadStatus.className = 'status-msg error';
+                uploadStatus.textContent = 'Only PDF files are allowed.';
+                return;
+            }
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Extracting...';
+            uploadStatus.className = 'status-msg info';
+            uploadStatus.textContent = 'Extracting text from PDF...';
+
+            const formData = new FormData();
+            formData.append('resume_pdf', file);
+
+            try {
+                const response = await fetch('/api/extract-resume', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    uploadStatus.className = 'status-msg error';
+                    uploadStatus.textContent = data.message || 'Could not extract text from PDF.';
+                    return;
+                }
+
+                resumeInput.value = data.resume_text;
+                uploadStatus.className = 'status-msg success';
+                uploadStatus.textContent = 'Resume text extracted successfully!';
+            } catch (err) {
+                uploadStatus.className = 'status-msg error';
+                uploadStatus.textContent = 'Upload failed: ' + (err.message || 'Network error');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Upload PDF';
+            }
+        });
+
+        // 2. Main Analyze Match Handler
+        document.getElementById('analyze-btn').addEventListener('click', async function() {
+            const resumeInput = document.getElementById('resume');
+            const jobDescInput = document.getElementById('job-description');
+            const analyzeBtn = document.getElementById('analyze-btn');
+            const resultsContent = document.getElementById('results-content');
+
+            const resume = resumeInput.value.trim();
+            const jobDescription = jobDescInput.value.trim();
+
+            if (!resume || !jobDescription) {
+                resultsContent.innerHTML = '<div class="error-state">Please enter both a resume and a job description.</div>';
+                return;
+            }
+
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = 'Analyzing...';
+            resultsContent.innerHTML = '<div class="loading-state">Analyzing match with AI... Please wait.</div>';
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        resume: resume,
+                        job_description: jobDescription
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    const errorMsg = data.message || 'Analysis failed. Please try again.';
+                    resultsContent.innerHTML = `<div class="error-state">${escapeHtml(errorMsg)}</div>`;
+                    return;
+                }
+
+                // Store state for secondary actions
+                currentAnalysis = data;
+                currentResume = resume;
+                currentJobDescription = jobDescription;
+
+                // Render match report
+                const matchingSkillsHtml = (data.matching_skills && data.matching_skills.length > 0)
+                    ? data.matching_skills.map(s => `<span class="skill-badge skill-matching">${escapeHtml(s)}</span>`).join('')
+                    : '<em>None identified</em>';
+
+                const missingSkillsHtml = (data.missing_skills && data.missing_skills.length > 0)
+                    ? data.missing_skills.map(s => `<span class="skill-badge skill-missing">${escapeHtml(s)}</span>`).join('')
+                    : '<em>None identified</em>';
+
+                const gapsHtml = (data.gaps && data.gaps.length > 0)
+                    ? `<ul class="result-list">${data.gaps.map(g => `<li>${escapeHtml(g)}</li>`).join('')}</ul>`
+                    : '<p><em>No major gaps identified</em></p>';
+
+                const recommendationsHtml = (data.recommendations && data.recommendations.length > 0)
+                    ? `<ul class="result-list">${data.recommendations.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul>`
+                    : '<p><em>No specific recommendations needed</em></p>';
+
+                resultsContent.innerHTML = `
+                    <div class="match-score-box">
+                        <h3>Match Score: <span class="score-number">${escapeHtml(String(data.match_score))}%</span></h3>
+                    </div>
+
+                    <div class="result-group">
+                        <h3>Matching Skills</h3>
+                        <div class="skills-container">
+                            ${matchingSkillsHtml}
+                        </div>
+                    </div>
+
+                    <div class="result-group">
+                        <h3>Missing Skills</h3>
+                        <div class="skills-container">
+                            ${missingSkillsHtml}
+                        </div>
+                    </div>
+
+                    <div class="result-group">
+                        <h3>Experience Match</h3>
+                        <p class="experience-text">${escapeHtml(data.experience_match || 'N/A')}</p>
+                    </div>
+
+                    <div class="result-group">
+                        <h3>Gaps</h3>
+                        ${gapsHtml}
+                    </div>
+
+                    <div class="result-group">
+                        <h3>Recommendations</h3>
+                        ${recommendationsHtml}
+                    </div>
+
+                    <div class="report-actions">
+                        <button type="button" id="improve-btn" class="btn-action">Improve My Resume</button>
+                        <button type="button" id="explain-btn" class="btn-action-alt">Explain My Match</button>
+                    </div>
+
+                    <div id="improve-result-container"></div>
+                    <div id="explain-result-container"></div>
+                `;
+
+                // Attach handlers for secondary actions
+                document.getElementById('improve-btn').addEventListener('click', handleImproveResume);
+                document.getElementById('explain-btn').addEventListener('click', handleExplainMatch);
+
+            } catch (err) {
+                resultsContent.innerHTML = `<div class="error-state">Network error: ${escapeHtml(err.message || 'Failed to communicate with server.')}</div>`;
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = 'Analyze Match';
+            }
+        });
+
+        // 3. Improve Resume Handler
+        async function handleImproveResume() {
+            if (!currentAnalysis || !currentResume) return;
+
+            const improveBtn = document.getElementById('improve-btn');
+            const container = document.getElementById('improve-result-container');
+
+            improveBtn.disabled = true;
+            improveBtn.textContent = 'Improving...';
+            container.innerHTML = '<div class="loading-state">Generating resume improvements with AI... Please wait.</div>';
+
+            try {
+                const response = await fetch('/api/improve-resume', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        resume: currentResume,
+                        gaps: currentAnalysis.gaps || [],
+                        recommendations: currentAnalysis.recommendations || []
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    container.innerHTML = `<div class="error-state">${escapeHtml(data.message || 'Resume improvement failed')}</div>`;
+                    return;
+                }
+
+                const sectionsHtml = (data.improved_sections && data.improved_sections.length > 0)
+                    ? data.improved_sections.map(sec => `
+                        <div class="improvement-item">
+                            <h4>${escapeHtml(sec.section)}</h4>
+                            <p>${escapeHtml(sec.suggestion)}</p>
+                        </div>
+                    `).join('')
+                    : '<p><em>No section improvements suggested.</em></p>';
+
+                container.innerHTML = `
+                    <div class="feature-card">
+                        <h3>Resume Improvement Suggestions</h3>
+                        ${sectionsHtml}
+                    </div>
+                `;
+            } catch (err) {
+                container.innerHTML = `<div class="error-state">Network error: ${escapeHtml(err.message || 'Request failed')}</div>`;
+            } finally {
+                improveBtn.disabled = false;
+                improveBtn.textContent = 'Improve My Resume';
+            }
+        }
+
+        // 4. Explain Match Handler
+        async function handleExplainMatch() {
+            if (!currentAnalysis || !currentResume || !currentJobDescription) return;
+
+            const explainBtn = document.getElementById('explain-btn');
+            const container = document.getElementById('explain-result-container');
+
+            explainBtn.disabled = true;
+            explainBtn.textContent = 'Explaining...';
+            container.innerHTML = '<div class="loading-state">Generating score explanation with AI... Please wait.</div>';
+
+            try {
+                const response = await fetch('/api/explain-match', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        resume: currentResume,
+                        job_description: currentJobDescription,
+                        analysis: {
+                            match_score: currentAnalysis.match_score,
+                            matching_skills: currentAnalysis.matching_skills || [],
+                            missing_skills: currentAnalysis.missing_skills || [],
+                            experience_match: currentAnalysis.experience_match || '',
+                            gaps: currentAnalysis.gaps || [],
+                            recommendations: currentAnalysis.recommendations || []
+                        }
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    container.innerHTML = `<div class="error-state">${escapeHtml(data.message || 'Match explanation failed')}</div>`;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="feature-card">
+                        <h3>Score Explanation</h3>
+                        <p class="explanation-text">${escapeHtml(data.explanation || 'No explanation generated.')}</p>
+                    </div>
+                `;
+            } catch (err) {
+                container.innerHTML = `<div class="error-state">Network error: ${escapeHtml(err.message || 'Request failed')}</div>`;
+            } finally {
+                explainBtn.disabled = false;
+                explainBtn.textContent = 'Explain My Match';
+            }
+        }
+    </script>
+</body>
+</html>
